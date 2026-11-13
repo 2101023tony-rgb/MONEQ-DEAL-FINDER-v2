@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#060B19" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MONEQ" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./public/icons/icon.svg" />
+  <title>MONEQ DEAL FINDER | AI 리셀 차익 분석 플랫폼</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>MONEQ DEAL FINDER</span>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button id="pwaInstallBtn" class="btn btn-secondary hidden" style="padding:5px 10px; font-size:0.75rem;">앱 설치</button>
+      <span id="connectionStatus" class="status-pill">연결 확인 중...</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="transparencyBanner" class="transparency-banner">
+      ⚠️ <strong>데이터 연동 투명성 고지:</strong> 네이버 쇼핑 OpenAPI 및 Gemini AI는 환경변수 설정 시 실데이터로 작동합니다. 당근·번개장터는 일반 개인용 공개 API가 없어 무단 크롤링 대신 <strong>[SAMPLE / 테스트 데이터]</strong> 및 공식 파트너 연동 슬롯으로 구분 표시됩니다.
+    </div>
+
+    <section class="hero-budget-card">
+      <div class="hero-title">AI BUDGET ARBITRAGE ENGINE · 보유 예산 기반 리셀 추천</div>
+      <p style="font-size:0.9rem; color:var(--text-secondary);">
+        보유 자본금을 입력하면 예산 초과 매물을 자동 필터링하고 <strong>예상 순이익 &amp; 수익률(ROI)</strong>이 가장 높은 매물을 우선 추천합니다.
+      </p>
+      <div class="budget-input-row">
+        <input type="number" id="budgetInput" class="budget-input" value="500000" step="10000" min="10000" placeholder="예산 입력 (원)" />
+        <select id="budgetCategorySelect">
+          <option value="전체">전체 카테고리</option>
+          <option value="아이폰 및 갤럭시">아이폰 및 갤럭시</option>
+          <option value="명품 가방 및 지갑">명품 가방 및 지갑</option>
+          <option value="명품 시계">명품 시계</option>
+          <option value="에어팟 및 헤드폰">에어팟 및 헤드폰</option>
+          <option value="노트북 및 태블릿">노트북 및 태블릿</option>
+          <option value="게임기">게임기</option>
+          <option value="카메라">카메라</option>
+          <option value="기타 중고 전자제품">기타 중고 전자제품</option>
+        </select>
+        <button id="runBudgetBtn" class="btn btn-primary">AI 꿀매물 추천 실행</button>
+      </div>
+      <div class="preset-chips">
+        <button class="chip" data-budget="200000">20만원</button>
+        <button class="chip" data-budget="300000">30만원</button>
+        <button class="chip active" data-budget="500000">50만원</button>
+        <button class="chip" data-budget="1000000">100만원</button>
+        <button class="chip" data-budget="1500000">150만원</button>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">현재 설정 예산</div>
+        <div class="kpi-val green" id="kpiBudget">500,000원</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">예산 내 추천 매물</div>
+        <div class="kpi-val" id="kpiRecCount">-</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">최고 예상 순이익</div>
+        <div class="kpi-val green" id="kpiMaxProfit">-</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">최고 예상 수익률</div>
+        <div class="kpi-val green" id="kpiMaxRoi">-</div>
+      </div>
+    </section>
+
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-recommend">④ AI 예산 맞춤 추천</button>
+      <button class="tab-btn" data-tab="tab-deals">②·③ 실시간 꿀매물 &amp; TOP 10</button>
+      <button class="tab-btn" data-tab="tab-analyze">① AI 시세 정밀 분석</button>
+      <button class="tab-btn" data-tab="tab-listing">⑤ AI 판매글 자동 작성</button>
+      <button class="tab-btn" data-tab="tab-saved">★ 관심 저장 매물</button>
+    </nav>
+
+    <section id="tab-recommend" class="tab-panel">
+      <div class="section-header">
+        <h2 class="section-title">예산 내 AI 추천 리셀 상품 (수익률순)</h2>
+        <span style="font-size:0.8rem; color:var(--text-secondary);">공식: 순이익 = 예상판매가 - 매입가 - 수수료 - 배송비(4,000) - 기타(1,000)</span>
+      </div>
+      <div id="recommendList" class="deal-grid"></div>
+    </section>
+
+    <section id="tab-deals" class="tab-panel hidden">
+      <div class="section-header">
+        <h2 class="section-title">플랫폼 비교 &amp; 예상 차익 TOP 10</h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="text" id="dealSearchInput" placeholder="상품명 검색 (예: 에어팟, 아이폰)" />
+          <select id="dealSortSelect">
+            <option value="profit">예상 차익순</option>
+            <option value="roi">예상 수익률순</option>
+            <option value="lowest_price">최저가순</option>
+            <option value="latest">최신순</option>
+          </select>
+          <button id="searchDealsBtn" class="btn btn-primary">검색</button>
+        </div>
+      </div>
+      <div id="categoryChips" class="preset-chips" style="margin-bottom:14px;"></div>
+      <div id="dealsList" class="deal-grid"></div>
+    </section>
+
+    <section id="tab-analyze" class="tab-panel hidden">
+      <div class="panel-box">
+        <h2 class="section-title" style="margin-bottom:10px;">① AI 자동 시세 &amp; 경쟁도 분석</h2>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:12px;">
+          실제 확인된 가격 데이터만 기반으로 분석하며, 데이터가 없으면 임의 시세를 만들지 않고 <strong>데이터 부족</strong>을 표시합니다.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="text" id="analyzeQueryInput" style="flex:1;" placeholder="분석할 정확한 상품명/모델명 입력 (예: 에어팟 프로 2)" />
+          <button id="runAnalyzeBtn" class="btn btn-primary">시세 분석 실행</button>
+        </div>
+        <div id="analyzeResultBox" style="margin-top:16px;"></div>
+      </div>
+    </section>
+
+    <section id="tab-listing" class="tab-panel hidden">
+      <div class="panel-box">
+        <h2 class="section-title" style="margin-bottom:10px;">⑤ AI 리셀 판매글 &amp; 적정가 자동 생성</h2>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:12px;">
+          <input type="text" id="listProductName" placeholder="상품명 (예: 에어팟 프로 2세대 USB-C)" />
+          <input type="number" id="listBuyPrice" placeholder="매입가격 (원)" />
+          <select id="listCondition">
+            <option value="S급 (미세 사용감)">S급 (미세 사용감)</option>
+            <option value="A급 (외관 깨끗함)">A급 (외관 깨끗함)</option>
+            <option value="B급 (생활기스 존재)">B급 (생활기스 존재)</option>
+          </select>
+          <input type="text" id="listItems" value="풀박스, 정품 충전 케이블" placeholder="구성품" />
+        </div>
+        <textarea id="listDefects" rows="2" style="width:100%; margin-bottom:10px;" placeholder="특이사항 및 작동 상태">모든 기능 정상 작동, 외관 찍힘 없음</textarea>
+        <button id="generateListingBtn" class="btn btn-primary">AI 판매글 초안 생성</button>
+        <div id="listingResultBox" style="margin-top:16px;"></div>
+      </div>
+    </section>
+
+    <section id="tab-saved" class="tab-panel hidden">
+      <div class="section-header">
+        <h2 class="section-title">관심 상품 및 저장한 매물</h2>
+      </div>
+      <div id="savedDealsList" class="deal-grid"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-bar">
+    <button class="bottom-item active" data-tab="tab-recommend">예산추천</button>
+    <button class="bottom-item" data-tab="tab-deals">꿀매물탐색</button>
+    <button class="bottom-item" data-tab="tab-analyze">시세분석</button>
+    <button class="bottom-item" data-tab="tab-listing">판매글작성</button>
+    <button class="bottom-item" data-tab="tab-saved">관심매물</button>
+  </nav>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

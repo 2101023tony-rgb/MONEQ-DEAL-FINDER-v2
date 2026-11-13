@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#060B19"/>
+  <rect x="24" y="24" width="464" height="464" rx="92" fill="none" stroke="#00FF9D" stroke-width="14"/>
+  <path d="M128 340 L205 230 L270 285 L384 156" fill="none" stroke="#00FF9D" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="384" cy="156" r="22" fill="#00FF9D"/>
+  <text x="256" y="425" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-weight="800" font-size="64">MONEQ</text>
+</svg>
